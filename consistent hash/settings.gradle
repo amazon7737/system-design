@@ -1,0 +1,6 @@
+rootProject.name = 'hash-example'
+include 'gateway-service'
+include 'backend-service'
+include 'client-service'
+include 'common'
+
