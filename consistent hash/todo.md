@@ -1,5 +1,5 @@
 
-### 전체 실행 흐름
+### 전체 프로세스
 
 1. client-service → /test?userId=abc123 요청
 2. WebClient가 X-Hash-Key: abc123 포함해서 gateway-service의 /api/hello 호출

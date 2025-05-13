@@ -1,5 +1,7 @@
 package org.gatewayservice;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
@@ -9,43 +11,72 @@ import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 
 @Component
 public class ConsistentHashLoadBalancer implements ReactorServiceInstanceLoadBalancer {
 
-    private final String serviceId;
     private final ObjectProvider<ServiceInstanceListSupplier> serviceInstanceListSupplierProvider;
+    private final String serviceId;
+    private final ConsistentHash<ServiceInstance> consistentHash;
+    private final Logger log = LoggerFactory.getLogger("ConsistentHashLoadBalancer");
 
-    public ConsistentHashLoadBalancer(@Value("${spring.application.name}") String serviceId,
-                                      ObjectProvider<ServiceInstanceListSupplier> provider) {
-        this.serviceId = serviceId;
+    public ConsistentHashLoadBalancer(ObjectProvider<ServiceInstanceListSupplier> provider) {
         this.serviceInstanceListSupplierProvider = provider;
+        this.serviceId = "backend-service";
+        this.consistentHash = new ConsistentHash<>();
     }
 
 
     @Override
     public Mono<Response<ServiceInstance>> choose(Request request) {
-        String hashKey = null;
-        if (request.getContext() instanceof RequestDataContext ctx) {
-            hashKey = ctx.getClientRequest().getHeaders().getFirst("X-Hash-Key");
-        }
-        if (hashKey == null) {
-            hashKey = UUID.randomUUID().toString();
+        ServiceInstanceListSupplier supplier = serviceInstanceListSupplierProvider.getIfAvailable();
+        if (supplier == null) {
+            log.warn("No ServiceInstanceListSupplier available");
+            return Mono.just(new EmptyResponse());
         }
 
-        String finalHashKey = hashKey;
-        return serviceInstanceListSupplierProvider.get().get(request)
-                .map(instances -> getInstance(instances, finalHashKey));
+        return supplier.get().next().map(serviceInstances -> {
+            if (serviceInstances.isEmpty()) {
+                log.warn("No service instances available");
+                return new EmptyResponse();
+            }
+
+            String userId = extractUserId(request);
+            consistentHash.update(serviceInstances);
+
+            ServiceInstance selected = consistentHash.get(userId).orElseThrow(() -> new RuntimeException("로드밸런싱에 문제가 있습니다."));
+
+            if (selected == null) {
+                log.warn("No instance selected for userId={}", userId);
+                return new EmptyResponse();
+            }
+
+            log.info("Selected instance for userId={}: {}:{}", userId, selected.getHost(), selected.getPort());
+            return new DefaultResponse(selected);
+        });
     }
 
-    private Response<ServiceInstance> getInstance(List<ServiceInstance> instances, String key) {
-        if (instances.isEmpty()) {
-            return new EmptyResponse();
+
+    private String extractUserId(Request request) {
+        if (request instanceof RequestDataContext rdc) {
+            RequestData data = rdc.getClientRequest();
+            URI url = data.getUrl();
+            String query = url.getQuery(); // 예: userId=alice&other=1
+
+            if (query != null) {
+                for (String param : query.split("&")) {
+                    String[] keyValue = param.split("=");
+                    if (keyValue.length == 2 && keyValue[0].equals("userId")) {
+                        return keyValue[1];
+                    }
+                }
+            }
         }
-        int index = Math.abs(key.hashCode()) % instances.size();
-        return new DefaultResponse(instances.get(index));
+        return "default";
     }
 }
