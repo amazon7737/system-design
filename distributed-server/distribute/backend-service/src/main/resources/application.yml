@@ -1,0 +1,7 @@
+server:
+  port: 8081
+  instance-id: abc2
+
+spring:
+  application:
+    name: backend-service

@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: gateway-service
+  cloud:
+    loadbalancer:
+      instances:
+        backend-service:
+          - uri: http://localhost:8081
+          - uri: http://localhost:8082
+

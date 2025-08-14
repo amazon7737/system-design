@@ -1,0 +1,4 @@
+rootProject.name = 'distribute'
+
+include 'gateway-service'
+include 'backend-service'
