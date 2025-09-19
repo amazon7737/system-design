@@ -1,4 +1,4 @@
-## Spring-Cloud-Gateway
+<img width="442" height="104" alt="image" src="https://github.com/user-attachments/assets/db8074cc-a96a-43c6-823c-2baa143dae72" />## Spring-Cloud-Gateway
 - [Docs](https://spring.io/projects/spring-cloud-gateway)
 - Spring-Cloud-Gateway는 Spring 기반으로 API Gateway를 구축할 수 있도록 API 라우팅, 보안, 모니터링/메트릭, 복원력을 제공해주는 라이브러리이다.
 
@@ -26,4 +26,29 @@
 <img width="548" height="775" alt="image" src="https://github.com/user-attachments/assets/0eac31ba-8928-4634-b3b0-e343670fba79" />
 
 - New -> Module 을 누른다.
+
+<img width="801" height="631" alt="image" src="https://github.com/user-attachments/assets/d9628c4c-381e-43e0-9323-4663fcf395f1" />
+
+- 이름으로 `backend-service`를 입력한다.
+- Next -> Create 한다.
+
+<img width="442" height="104" alt="image" src="https://github.com/user-attachments/assets/087c26fa-7902-4bd3-996d-7f6f1e47dd78" />
+
+- src 디렉토리, build.gradle을 제외한 모든 파일을 삭제한다.
+
+##### build.gradle
+```
+plugins {
+    id 'org.springframework.boot'
+    id 'java'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+```
+build.gradle에 덮어쓴다.
 
