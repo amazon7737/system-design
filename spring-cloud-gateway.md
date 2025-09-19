@@ -1,7 +1,5 @@
 ## Spring-Cloud-Gateway
 
-<img width="442" height="104" alt="image" src="https://github.com/user-attachments/assets/db8074cc-a96a-43c6-823c-2baa143dae72" />
-
 - [Docs](https://spring.io/projects/spring-cloud-gateway)
 - Spring-Cloud-Gateway는 Spring 기반으로 API Gateway를 구축할 수 있도록 API 라우팅, 보안, 모니터링/메트릭, 복원력을 제공해주는 라이브러리이다.
 
