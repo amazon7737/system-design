@@ -334,6 +334,11 @@ public class Resilience4jRateLimiterFilter implements GatewayFilter, Ordered {
 ```
 ab -n [총 요청 수] -c [동시 요청 수] [테스트할 URL]
 ```
+
+- `-c`는 동시 접속자 수를 설정할 수 있다.
+- `-n` 는 총 요청수 이다.
+- `-s` 는 소켓 타임아웃(sec) 을 설정할 수 있다.
+
 - `ab -n 100 -c 20 http://localhost:8080/request` 을 실행하여 총 100번의 요청을 동시에 20개씩 보내었다.
 
 <img width="526" height="184" alt="image" src="https://github.com/user-attachments/assets/00dbbe19-cd9e-44b4-b706-e42214231070" />
@@ -371,12 +376,13 @@ ab -n [총 요청 수] -c [동시 요청 수] [테스트할 URL]
 - RateLimiter에 의해서 일부 요청은 의도적으로 거절되는 것이다.
 
 ```
-ab -n 2000 -c 50 http://localhost:8080/request
+ab -n 100000 -c 20 -s 600 http://localhost:8080/request
 ```
+- 타임아웃 설정이 문제인가 싶어, 타임아웃을 600s를 주고 테스트해보았다.
 
-- `-c`는 동시 접속자 수를 설정할 수 있다.
-- `-n` 는 총 요청수 이다.
-- `-s` 는 소켓 타임아웃(sec) 을 설정할 수 있다.
+<img width="292" height="69" alt="image" src="https://github.com/user-attachments/assets/411219f2-9338-4db5-af37-438461fc682b" />
+
+- 여전히 타임아웃 현상이 발생하는 것을 확인할 수 있다. 성공된 요청은 총 요청량에 16% 정도가 처리되었다.
 
 <img width="429" height="147" alt="image" src="https://github.com/user-attachments/assets/7bca5b33-3d81-48b6-b0aa-09fdf220a357" />
 
