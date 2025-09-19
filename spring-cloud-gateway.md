@@ -23,3 +23,7 @@
 
 - 새로운 프로젝트를 생성하고, 기존에 생성되어있는 src 디렉토리를 삭제한다.
 
+<img width="548" height="775" alt="image" src="https://github.com/user-attachments/assets/0eac31ba-8928-4634-b3b0-e343670fba79" />
+
+- New -> Module 을 누른다.
+
