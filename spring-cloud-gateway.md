@@ -81,8 +81,105 @@ management:
   - 인스턴스 고유 식별자를 명시한다. 여러 인스턴스를 띄울 때마다 구분할 수 있다.
 - spring.application.name: backend-service
   - 스프링 애플리케이션의 이름을 설정한다. eureka의 서비스 레지스트리와 같은 연동이나 로그에 표시될 때 쓰인다.
-- management.endpoints.web.exposure.include
+- management.endpoints.web.exposure.includeㅁ
   - health : Actuator 엔드포인트 중 웹(HTTP)으로 노출할 목록을 제한한다. health 엔드포인트만 외부에서 호출 가능하도록 한다   
 - management.endpoint.health.show-details
   - always : health 엔드포인트에서 전체 세부 정보를 항상 보여주도록 한다.
-  
+
+```java
+@RestController
+public class Controller {
+
+    private static final Logger log = LoggerFactory.getLogger(Controller.class);
+    @Value("${server.instance-id}")
+    private String instanceId;
+
+    @GetMapping("/request")
+    public String response() {
+        log.info("server id is : {} ", instanceId);
+        return instanceId;
+    }
+}
+```
+- Controller 클래스를 생성하여 요청을 받을 엔드포인트를 작성한다.
+
+<img width="369" height="71" alt="image" src="https://github.com/user-attachments/assets/d2b4e702-7010-4273-b331-392807e90d12" />
+- gateway-service라는 이름으로 새로운 모듈을 생성한다.
+
+
+```
+plugins {
+    id 'org.springframework.boot'
+    id 'java'
+}
+
+dependencies {
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+    implementation 'io.github.resilience4j:resilience4j-ratelimiter:2.0.0'
+    implementation 'io.github.resilience4j:resilience4j-reactor:2.0.0'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+```
+
+- `gateway-service`의 build.gradle 에 위와 같이 작성한다.
+
+```
+include 'gateway-service'
+include 'backend-service'
+```
+- root 디렉토리의 settings.gradle 에 모듈들을 include 한다.
+
+```
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.4' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
+}
+
+group = 'org.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('springCloudVersion', "2025.0.0")
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(17))
+        }
+    }
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
+    }
+}
+```
+
+- root 디렉토리의 build.gradle 에 위와 같이 작성한다.
+
