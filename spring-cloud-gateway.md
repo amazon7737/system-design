@@ -185,3 +185,59 @@ subprojects {
 
 - root 디렉토리의 build.gradle 에 위와 같이 작성한다.
 
+#### RateLimiterFilter
+
+gateway-service에 ratelimiter를 작성하여 api 요청량을 제한해볼 것이다.
+작성 전에, RateLimiter 종류에 대해서 알아보도록 하자.
+
+##### Guava RateLimiter
+- Google의 Guava 라이브러리 안에 포함된 RateLimiter이다. 표준처럼 많이 사용되었다.
+- Token Bucket 알고리즘 기반
+  - 토큰이 없으면 대기하거나 요청을 거부
+
+
+##### Bucket4j
+
+- Token Bucket 알고리즘 기반
+- 특징 : Redis 연동으로 분산 Rate Limit 제어 가능, 다양한 refill 전략(고정, 점진적) 지원.
+
+##### Netflix Hystrix
+
+- Hystrix 자체는 Circuit Breaker 중심이지만, 내부적으로 Concurrency 제한이나 Thread Pool/Queue 제한을 통해 Rate Limiting 비슷한 효과를 낸다.
+- 공식적으로 deprecated 된 상태 이 자리를 Resilience4j가 대체
+
+##### Resilience4j 등장 배경
+
+- Guava : 심플하지만 확장성 부족, 분산 지원 약함.
+- Hystrix : 무거움, deprecated
+- Bucket4j : 강력하지만 외부연동이 필요할 수 있음. 경량 라이브러리화 한것이 Resilience4j이다.
+
+- FilterConfig
+  
+```java
+
+@Configuration
+public class FilterConfig {
+    @Bean
+    public RouteLocator gatewayRoutes(final RouteLocatorBuilder builder, Resilience4jRateLimiterFilter rateLimiterFilter) {
+        return builder.routes()
+                .route("backend-service", route -> route
+                        .path("/request/**") // 이 주소로 요청이 올 경우
+                        .filters(filter -> filter.filter(rateLimiterFilter))     // 필터 동작을 실행
+                        .uri("lb://backend-service"))
+                .build();
+    }
+}
+```
+
+- RouteLocator는 Spring Cloud Gateway에서 라우팅 규칙을 정의하는 Bean이다.
+- `RouteLocatorBuilder`를 이용해 어떤 요청을 하면 어떤 서비스로 보낼지 결정한다.
+- `.route("backend-service", route -> ...)` 여기서 `"backend-service"`는 라우트의 식별자이다.
+- `.path("/request/**"` 클라이언트의 요청 경로가 `/request/**` 패턴과 일치할 때만 라우트가 실행된다.
+- `.filters(filter -> filter.filter(rateLimiterFilter))` 는 Gateway 필터를 적용하는 부분이다.
+  - `rateLimiterFilter`는 Resilience4j RateLimiter를 구현한 커스텀 필터이다.
+  - 요청이 들어올때마다 Resilience4j RateLimiter가 확인해서, 허용된 요청이면 진행한다.
+  - 허용량을 초과하면 `HTTP 429 (Too Many Requests)` 에러를 반환한다.
+- `.uri("lb://backend-service")` 는 요청을 어디로 보낼지 지정한다.
+- `lb://`는 Eureka(Service Discovery)를 통한 로드 밸런싱을 의미한다.
+-  
