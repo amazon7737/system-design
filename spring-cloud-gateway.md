@@ -76,4 +76,8 @@ management:
       show-details: always
 ```
 
-- 
+- server.port는 8081으로 설정한다.
+- instance-id: abc2
+  - 인스턴스 고유 식별자를 명시한다. 여러 인스턴스를 띄울 때마다 구분할 수 있다.
+- spring.application.name: backend-service
+  - 스프링 애플리케이션의 이름을 설정한다. eureka의 서비스 레지스트리와 같은 연동이나 로그에 표시될 때 쓰인다.
