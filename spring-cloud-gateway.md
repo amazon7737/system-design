@@ -19,7 +19,7 @@
 
 위와 같은 서비스 모듈로 나누어 프로젝트를 생성하기 위해서, 멀티모듈 구조로 프로젝트를 생성한다.
 
-<img width="498" height="1049" alt="image" src="https://github.com/user-attachments/assets/2afc5924-789b-44dc-8048-38d4ecbe3ccb" />
+<img width="457" height="697" alt="image" src="https://github.com/user-attachments/assets/8c4fa40b-9ed5-4906-9774-2f16a49ec1a9" />
 
 - 새로운 프로젝트를 생성하고, 기존에 생성되어있는 src 디렉토리를 삭제한다.
 
