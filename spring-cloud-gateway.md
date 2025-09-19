@@ -53,3 +53,27 @@ dependencies {
 ```
 build.gradle에 덮어쓴다.
 
+<img width="302" height="95" alt="image" src="https://github.com/user-attachments/assets/678d6de4-db60-4385-a968-c0883f200923" />
+
+- resources 디렉토리에 `application.yml`을 생성한다.
+
+```yml
+server:
+  port: 8081
+  instance-id: abc2
+
+spring:
+  application:
+    name: backend-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+```
+
+- 
