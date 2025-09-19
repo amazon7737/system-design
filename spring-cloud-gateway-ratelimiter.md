@@ -323,3 +323,44 @@ public class Resilience4jRateLimiterFilter implements GatewayFilter, Ordered {
 - 작은 숫자일수록 먼저 실행된다.
 - 여기서는 `-1`로 작성하여 가장 먼저 실행되도록 유도했다.
 
+### 실행 결과
+
+<img width="1563" height="542" alt="image" src="https://github.com/user-attachments/assets/997803c0-2a19-44b7-9c2a-74e9e51f32cd" />
+
+- `gateway-service`는 `backend-service`로 요청을 정상적으로 전달하는 것을 확인하였다.
+
+### Apache Bench 의 ab를 통해서 요청량 제한 테스트 진행
+
+```
+ab -n [총 요청 수] -c [동시 요청 수] [테스트할 URL]
+```
+- `ab -n 100 -c 20 http://localhost:8080/request` 을 실행하여 총 100번의 요청을 동시에 20개씩 보내었다.
+
+<img width="526" height="184" alt="image" src="https://github.com/user-attachments/assets/00dbbe19-cd9e-44b4-b706-e42214231070" />
+
+- 결과로, 100개의 요청중 95개의 요청이 실패하였다. Filter에서 설정된 5개 요청 이후 동시적인 요청들은 모두 거부하도록 설정해서 인듯 하다.
+
+- 다음으로 더 큰 요청량들도 마찬가지의 결과를 보이는지 궁금하였다.
+- `ab -n 10000 -c 20 http://localhost:8080/request` 을 실행하여 총 10000번의 요청으로 늘려보았다.
+
+<img width="523" height="193" alt="image" src="https://github.com/user-attachments/assets/e793f774-20d8-4ada-a1bb-385b27749634" />
+
+- 마찬가지로 9995번의 요청이 실패하였고 5개의 요청이 성공하였다. 똑같은 결과가 나타남을 알 수 있다.
+
+- Filter와 ab 테스트 툴의 동시성 레벨(Concurrency Level)이 비슷할때는 어떤 결과가 나오는지 궁금하였다.
+
+
+<img width="1909" height="103" alt="image" src="https://github.com/user-attachments/assets/2f732c1e-22f2-451b-bc69-9612d52d8043" />
+
+- 동시성 레벨을 20을 유지한상태로, RateLimiter의 설정값을 `limitForPeriod(200)` 으로 설정하고, `limitRefreshPeriod(Duration.ofSeconds(10))` 10초마다 복구되도록 하였다.
+- 그리고 부하를 10000개의 요청을 주었따.
+
+<img width="521" height="196" alt="image" src="https://github.com/user-attachments/assets/61b0e75b-6ab2-4dec-87e3-41749acde8f0" />
+
+- 소켓 연결이 리셋되는 현상들이 발생하여, 요청이 소실된 것을 볼 수 있다.
+
+<img width="1210" height="1040" alt="image" src="https://github.com/user-attachments/assets/22c97743-c1b2-4315-852c-f186a02dc97d" />
+
+- `backend-service` 의 스레드풀은 열심히 동작한것을 시간대를 비교해보면 알 수 있다. 일부 요청들이 소실되는 것이다.
+
+
