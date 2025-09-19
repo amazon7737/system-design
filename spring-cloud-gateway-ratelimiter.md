@@ -347,15 +347,15 @@ ab -n [총 요청 수] -c [동시 요청 수] [테스트할 URL]
 
 - 마찬가지로 9995번의 요청이 실패하였고 5개의 요청이 성공하였다. 똑같은 결과가 나타남을 알 수 있다.
 
-- Filter와 ab 테스트 툴의 동시성 레벨(Concurrency Level)이 비슷할때는 어떤 결과가 나오는지 궁금하였다.
+- 부하 테스트의 동시성 레벨을 20으로 고정해두고, Filter의 최대 요청량 값을 변경해보았다.
+
+<img width="521" height="196" alt="image" src="https://github.com/user-attachments/assets/61b0e75b-6ab2-4dec-87e3-41749acde8f0" />
+
+- 동시성 레벨을 20을 유지한상태로, RateLimiter의 설정값을 `limitForPeriod(200)` 으로 설정하고, `limitRefreshPeriod(Duration.ofSeconds(10))` 10초마다 복구되도록 하였다.
+  - 그리고 부하를 10000개의 요청을 주었다.
 
 
 <img width="1909" height="103" alt="image" src="https://github.com/user-attachments/assets/2f732c1e-22f2-451b-bc69-9612d52d8043" />
-
-- 동시성 레벨을 20을 유지한상태로, RateLimiter의 설정값을 `limitForPeriod(200)` 으로 설정하고, `limitRefreshPeriod(Duration.ofSeconds(10))` 10초마다 복구되도록 하였다.
-- 그리고 부하를 10000개의 요청을 주었따.
-
-<img width="521" height="196" alt="image" src="https://github.com/user-attachments/assets/61b0e75b-6ab2-4dec-87e3-41749acde8f0" />
 
 - 소켓 연결이 리셋되는 현상들이 발생하여, 요청이 소실된 것을 볼 수 있다.
 
@@ -363,4 +363,7 @@ ab -n [총 요청 수] -c [동시 요청 수] [테스트할 URL]
 
 - `backend-service` 의 스레드풀은 열심히 동작한것을 시간대를 비교해보면 알 수 있다. 일부 요청들이 소실되는 것이다.
 
+- 요청을 100,000 으로 늘려보았다.
+
+<img width="295" height="75" alt="image" src="https://github.com/user-attachments/assets/e6567fa5-6a77-451e-987e-089f85479a70" />
 
