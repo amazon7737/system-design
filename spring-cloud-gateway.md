@@ -81,3 +81,8 @@ management:
   - 인스턴스 고유 식별자를 명시한다. 여러 인스턴스를 띄울 때마다 구분할 수 있다.
 - spring.application.name: backend-service
   - 스프링 애플리케이션의 이름을 설정한다. eureka의 서비스 레지스트리와 같은 연동이나 로그에 표시될 때 쓰인다.
+- management.endpoints.web.exposure.include
+  - health : Actuator 엔드포인트 중 웹(HTTP)으로 노출할 목록을 제한한다. health 엔드포인트만 외부에서 호출 가능하도록 한다   
+- management.endpoint.health.show-details
+  - always : health 엔드포인트에서 전체 세부 정보를 항상 보여주도록 한다.
+  
