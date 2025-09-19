@@ -306,9 +306,9 @@ public class Resilience4jRateLimiterFilter implements GatewayFilter, Ordered {
 - 두 클래스에 대한 구현 메서드를 작성하여 우리가 원하는 filter 동작을 설정할 수 있다.
 - `RateLimiter` 는 `RateLimiterConfigLoader`에서 주입받은 객체이다.
 
-- `Mono.just(exchange)
+- `Mono.just(exchange)`
   - WebFlux에서 요청/응답을 감싸는 `ServerWebExchange` 객체를 Reactive 스트림으로 시작한다.
-- `.transformDeferred(RateLimiterOperator.of(rateLimiter))
+- `.transformDeferred(RateLimiterOperator.of(rateLimiter))`
   - Resilience4j의 RateLimiter 연산자를 적용한다.
   - 해당 파싱에 도달했을때, 요청을 허용할지 차단할지 결정한다.
   - 요청이 거부되면, 에러가 발생한다.
