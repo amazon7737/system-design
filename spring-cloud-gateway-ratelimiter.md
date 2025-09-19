@@ -228,7 +228,7 @@ public class FilterConfig {
                 .route("backend-service", route -> route
                         .path("/request/**") // 이 주소로 요청이 올 경우
                         .filters(filter -> filter.filter(rateLimiterFilter))     // 필터 동작을 실행
-                        .uri("lb://backend-service"))
+                        .uri("http://localhost:8081"))
                 .build();
     }
 }
@@ -242,7 +242,7 @@ public class FilterConfig {
   - `rateLimiterFilter`는 Resilience4j RateLimiter를 구현한 커스텀 필터이다.
   - 요청이 들어올때마다 Resilience4j RateLimiter가 확인해서, 허용된 요청이면 진행한다.
   - 허용량을 초과하면 `HTTP 429 (Too Many Requests)` 에러를 반환한다.
-- `.uri("lb://backend-service")` 는 요청을 어디로 보낼지 지정한다.
+- `.uri("http://localhost:8081")` 을 통하여 `backend-service`로 요청을 전달한다.
 - `lb://`는 Eureka(Service Discovery)를 통한 로드 밸런싱을 의미한다.
   
 ##### RateLimiterConfigLoader 클래스 작성
