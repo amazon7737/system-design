@@ -367,3 +367,20 @@ ab -n [총 요청 수] -c [동시 요청 수] [테스트할 URL]
 
 <img width="295" height="75" alt="image" src="https://github.com/user-attachments/assets/e6567fa5-6a77-451e-987e-089f85479a70" />
 
+- `apr_socket-recv: Operation timed out (60)` 메시지는 서버에서 응답을 제대로 돌려주지 못하거나, 동시에 요청이 몰려서 소켓 응답을 받지 못할 때 발생한다.
+- RateLimiter를 통해서 429 처리가 많이 나오고, 남은 요청들은 타임아웃 처리된 것이다.
+- RateLimiter에 의해서 일부 요청은 의도적으로 거절되는 것이다.
+
+```
+ab -n 2000 -c 50 http://localhost:8080/request
+```
+
+- `-c`는 동시 접속자 수를 설정할 수 있다.
+- `-n` 는 총 요청수 이다.
+- `-s` 는 소켓 타임아웃(sec) 을 설정할 수 있다.
+
+<img width="429" height="147" alt="image" src="https://github.com/user-attachments/assets/7bca5b33-3d81-48b6-b0aa-09fdf220a357" />
+
+- 100% 를 보면 6708 의 요청이 429 거절을 당한것을 확인할 수 있다.
+- RateLimiter를 설정해두면, 최대 부하량을 넘는 수치들은 대부분 거절시켜 서버가 장애가 나는것을 방지한다. 사용자의 경험은 떨어질 수 있으나 서버의 전체 장애로 서비스가 멈추는 일은 줄일 수 있는 것이다.
+- 서비스마다, 설정값이 다를테지만 상황에 맞는 적절한 설정법이 필요할듯 하다.
