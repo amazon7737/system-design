@@ -212,7 +212,11 @@ gateway-service에 ratelimiter를 작성하여 api 요청량을 제한해볼 것
 - Hystrix : 무거움, deprecated
 - Bucket4j : 강력하지만 외부연동이 필요할 수 있음. 경량 라이브러리화 한것이 Resilience4j이다.
 
-- FilterConfig
+---
+
+- Resilience4j 의 RateLimiter를 사용하여 Filter 설정을 해보자.
+
+##### FilterConfig 클래스 작성
   
 ```java
 
@@ -240,4 +244,75 @@ public class FilterConfig {
   - 허용량을 초과하면 `HTTP 429 (Too Many Requests)` 에러를 반환한다.
 - `.uri("lb://backend-service")` 는 요청을 어디로 보낼지 지정한다.
 - `lb://`는 Eureka(Service Discovery)를 통한 로드 밸런싱을 의미한다.
--  
+  
+##### RateLimiterConfigLoader 클래스 작성
+
+```java
+@Configuration
+public class RateLimiterConfigLoader {
+    @Bean
+    public RateLimiter resilience4jRateLimiter() {
+        RateLimiterConfig config = RateLimiterConfig.custom()
+                .limitForPeriod(5)
+                .limitRefreshPeriod(Duration.ofSeconds(1))
+                .timeoutDuration(Duration.ofMillis(0))
+                .build();
+        return RateLimiter.of("gatewayRateLimiter", config);
+    }
+}
+```
+
+- `RateLimiterConfig`는 얼마나 많은 요청을 허용할지, 언제 리셋할지, 대기 정책은 어떻게 할지를 정의한다.
+- `limitForPeriod(5)`
+  - 주어진 refresh 기간 동안 최대 5개의 요청을 허용한다.
+- `limitRefreshPeriod(Duration.ofSeconds(1))
+  - 요청 제한이 1초 단위로 초기화 된다.
+- `timeoutDuration(Duration.ofMillis(0))`
+  - 요청이 허용되지 않으면 대기하지 않고 바로 실패 처리한다.
+
+#### Resilience4jRateLimiterFilter
+
+```java
+@Component
+public class Resilience4jRateLimiterFilter implements GatewayFilter, Ordered {
+
+    private final RateLimiter rateLimiter;
+
+    public Resilience4jRateLimiterFilter(RateLimiter rateLimiter) {
+        this.rateLimiter = rateLimiter;
+    }
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        return Mono.just(exchange)
+                .transformDeferred(RateLimiterOperator.of(rateLimiter))
+                .flatMap(e -> chain.filter(exchange))
+                .onErrorResume(throwable -> {
+                    // 요청 제한 초과 시 429 반환
+                    exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
+                    return exchange.getResponse().setComplete();
+                });
+    }
+
+    @Override
+    public int getOrder() {
+        return -1; // 필터 순서 우선순위 (적절히 조정)
+    }
+}
+```
+
+- `GatewayFilter`는 Spring Cloud Gateway의 필터 체인에 참여할 수 있는 인터페이스이다.
+- `Ordered` 는 필터 실행 순서를 지정할 수 있다.
+- 두 클래스에 대한 구현 메서드를 작성하여 우리가 원하는 filter 동작을 설정할 수 있다.
+- `RateLimiter` 는 `RateLimiterConfigLoader`에서 주입받은 객체이다.
+
+- `Mono.just(exchange)
+  - WebFlux에서 요청/응답을 감싸는 `ServerWebExchange` 객체를 Reactive 스트림으로 시작한다.
+- `.transformDeferred(RateLimiterOperator.of(rateLimiter))
+  - Resilience4j의 RateLimiter 연산자를 적용한다.
+  - 해당 파싱에 도달했을때, 요청을 허용할지 차단할지 결정한다.
+  - 요청이 거부되면, 에러가 발생한다.
+- `.flatMap(e -> chain.filter(exchange))`
+  - 허용된 경우, Gateway 의 다음 필터로 요청을 넘겨준다.
+- `.onErrorResume(throwable -> { ... })`
+  - 요청이 RateLimiter에 의해 거부되면 **429 Too Many Requests** 응답을 반환한다.
