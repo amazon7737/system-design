@@ -300,12 +300,13 @@ public class Resilience4jRateLimiterFilter implements GatewayFilter, Ordered {
     }
 }
 ```
-
+##### Gatewayfilter, Ordered, RateLimiter
 - `GatewayFilter`는 Spring Cloud Gateway의 필터 체인에 참여할 수 있는 인터페이스이다.
 - `Ordered` 는 필터 실행 순서를 지정할 수 있다.
 - 두 클래스에 대한 구현 메서드를 작성하여 우리가 원하는 filter 동작을 설정할 수 있다.
 - `RateLimiter` 는 `RateLimiterConfigLoader`에서 주입받은 객체이다.
 
+##### filter 구현 메서드
 - `Mono.just(exchange)`
   - WebFlux에서 요청/응답을 감싸는 `ServerWebExchange` 객체를 Reactive 스트림으로 시작한다.
 - `.transformDeferred(RateLimiterOperator.of(rateLimiter))`
@@ -316,3 +317,9 @@ public class Resilience4jRateLimiterFilter implements GatewayFilter, Ordered {
   - 허용된 경우, Gateway 의 다음 필터로 요청을 넘겨준다.
 - `.onErrorResume(throwable -> { ... })`
   - 요청이 RateLimiter에 의해 거부되면 **429 Too Many Requests** 응답을 반환한다.
+
+##### getOrder 구현 메서드
+- GatewayFilter는 여러 개 있을 수 있으므로 순서를 지정해야 한다.
+- 작은 숫자일수록 먼저 실행된다.
+- 여기서는 `-1`로 작성하여 가장 먼저 실행되도록 유도했다.
+
