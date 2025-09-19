@@ -105,6 +105,7 @@ public class Controller {
 - Controller 클래스를 생성하여 요청을 받을 엔드포인트를 작성한다.
 
 <img width="369" height="71" alt="image" src="https://github.com/user-attachments/assets/d2b4e702-7010-4273-b331-392807e90d12" />
+
 - gateway-service라는 이름으로 새로운 모듈을 생성한다.
 
 
